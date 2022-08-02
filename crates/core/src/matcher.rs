@@ -85,7 +85,7 @@ pub trait Matcher<L: Language> {
     }
 }
 
-impl<L: Language> Matcher<L> for str {
+impl<L: Language + 'static> Matcher<L> for str {
     fn match_node_with_env<'tree>(
         &self,
         node: Node<'tree, L>,
@@ -110,7 +110,7 @@ where
     }
 }
 
-impl<L: Language> PositiveMatcher<L> for str {}
+impl<L: Language + 'static> PositiveMatcher<L> for str {}
 impl<L, T> PositiveMatcher<L> for &T
 where
     L: Language,

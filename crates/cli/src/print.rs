@@ -14,7 +14,7 @@ pub fn print_matches<'a>(
     matches: impl Iterator<Item = Node<'a, SupportLang>>,
     path: &Path,
     pattern: &impl Matcher<SupportLang>,
-    rewrite: &Option<Pattern<SupportLang>>,
+    rewrite: &Option<std::pin::Pin<Box<Pattern<SupportLang>>>>,
 ) {
     let lock = std::io::stdout().lock(); // lock stdout to avoid interleaving output
     println!("{}", Cyan.italic().paint(format!("{}", path.display())));
@@ -29,7 +29,7 @@ pub fn print_matches<'a>(
             let new_str = format!(
                 "{}{}{}\n",
                 display.leading,
-                e.replace(pattern, rewrite).unwrap().inserted_text,
+                e.replace(pattern, &**rewrite).unwrap().inserted_text,
                 display.trailing
             );
             let base_line = display.start_line;

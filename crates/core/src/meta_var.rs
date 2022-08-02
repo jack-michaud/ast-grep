@@ -4,6 +4,7 @@ use crate::pattern::Pattern;
 use crate::Language;
 use crate::Node;
 use std::collections::HashMap;
+use std::pin::Pin;
 
 pub type MetaVariableID = String;
 
@@ -125,7 +126,7 @@ pub enum MetaVarMatcher<L: Language> {
     /// A regex to filter matched metavar based on its textual content.
     Regex(regex::Regex),
     /// A pattern to filter matched metavar based on its AST tree shape.
-    Pattern(Pattern<L>),
+    Pattern(Pin<Box<Pattern<L>>>),
     /// A kind_id to filter matched metavar based on its ts-node kind
     Kind(KindMatcher<L>),
 }

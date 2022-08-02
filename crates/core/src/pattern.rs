@@ -3,19 +3,41 @@ use crate::match_tree::match_node_non_recursive;
 use crate::matcher::{Matcher, PositiveMatcher};
 use crate::{meta_var::MetaVarEnv, Node, Root};
 
+use std::pin::Pin;
+use std::marker::PhantomPinned;
+
 #[derive(Clone)]
 pub struct Pattern<L: Language> {
     pub root: Root<L>,
+    node: *const tree_sitter::Node<'static>,
+    _marker: PhantomPinned,
 }
 
-impl<L: Language> Pattern<L> {
-    pub fn new(src: &str, lang: L) -> Self {
+unsafe impl<L: Language> Sync for Pattern<L> {}
+
+impl<L: Language + 'static> Pattern<L> {
+    pub fn new(src: &str, lang: L) -> Pin<Box<Self>> {
         let root = Root::new(src, lang);
-        let goal = root.root();
-        if goal.inner.child_count() != 1 {
+        let goal = root.root().inner;
+        if goal.child_count() != 1 {
             todo!("multi-children pattern is not supported yet.")
         }
-        Self { root }
+        let t = Self {
+            root,
+            node: std::ptr::null(),
+            _marker: PhantomPinned,
+        };
+        let mut boxed = Box::pin(t);
+        let root = &boxed.as_ref().root;
+        let mut node = root.root().inner;
+        while node.child_count() == 1 {
+            node = node.child(0).unwrap();
+        }
+        let node_ref: *const tree_sitter::Node = unsafe {
+            std::mem::transmute(&node)
+        };
+        unsafe { boxed.as_mut().get_unchecked_mut().node = node_ref };
+        boxed
     }
 }
 

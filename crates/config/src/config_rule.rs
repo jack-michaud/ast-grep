@@ -3,6 +3,7 @@ use ast_grep_core::meta_var::MetaVarEnv;
 use ast_grep_core::ops as o;
 use ast_grep_core::{KindMatcher, Matcher, Node, Pattern};
 use serde::{Deserialize, Serialize};
+use std::pin::Pin;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -27,13 +28,13 @@ pub enum PatternStyle {
 }
 
 
-pub enum DynamicRule<L: Language> {
+pub enum DynamicRule<L: Language + 'static> {
     All(o::All<L, DynamicRule<L>>),
     Any(o::Any<L, DynamicRule<L>>),
     Not(Box<o::Not<L, DynamicRule<L>>>),
     Inside(Box<o::Inside<L, DynamicRule<L>>>),
     Has(Box<o::Has<L, DynamicRule<L>>>),
-    Pattern(Pattern<L>),
+    Pattern(Pin<Box<Pattern<L>>>),
     Kind(KindMatcher<L>),
 }
 

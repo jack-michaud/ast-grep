@@ -12,6 +12,7 @@ use tree_sitter_python::language as language_python;
 use tree_sitter_rust::language as language_rust;
 use tree_sitter_swift::language as language_swift;
 use tree_sitter_typescript::{language_tsx, language_typescript};
+use std::pin::Pin;
 
 pub trait Language: Copy + Clone {
     /// Create an [`AstGrep`] instance for the language
@@ -38,7 +39,7 @@ pub trait Language: Copy + Clone {
     }
     /// normalize query before matching
     /// e.g. remove expression_statement, or prefer parsing {} to object over block
-    fn build_pattern(&self, query: &str) -> Pattern<Self> {
+    fn build_pattern(&self, query: &str) -> Pin<Box<Pattern<Self>>> where Self: 'static {
         Pattern::new(query, *self)
     }
 }

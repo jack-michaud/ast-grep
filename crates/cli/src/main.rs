@@ -85,16 +85,16 @@ fn run_with_pattern(args: Args) -> Result<()> {
     let rewrite = args.rewrite.map(|s| Pattern::new(s.as_ref(), lang));
     if !args.interactive {
         run_walker(walker, |path| {
-            match_one_file(path, lang, &pattern, &rewrite)
+            match_one_file(path, lang, &*pattern, &rewrite)
         });
         return Ok(());
     }
     run_walker_interactive(
         walker,
-        |path| filter_file_interactive(path, lang, &pattern),
+        |path| filter_file_interactive(path, lang, &*pattern),
         |(grep, path)| {
-            let matches = grep.root().find_all(&pattern);
-            print_matches(matches, &path, &pattern, &rewrite);
+            let matches = grep.root().find_all(&*pattern);
+            print_matches(matches, &path, &*pattern, &rewrite);
             interaction::prompt("Confirm", "yn", Some('y')).expect("Error happened during prompt");
         },
     );
@@ -200,7 +200,7 @@ fn match_one_file(
     path: &Path,
     lang: SupportLang,
     pattern: &impl Matcher<SupportLang>,
-    rewrite: &Option<Pattern<SupportLang>>,
+    rewrite: &Option<std::pin::Pin<Box<Pattern<SupportLang>>>>,
 ) {
     let file_content = match read_to_string(&path) {
         Ok(content) => content,
